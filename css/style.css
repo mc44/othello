@@ -1,0 +1,68 @@
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+body {
+    display: flex;
+    background-color: #574D68;
+    text-align: center;
+    flex-direction: column;
+    padding-top: 2%;
+}
+h1 {
+    color: #456990;;
+    font-family: 'Silkscreen';
+    text-align: center;
+    
+}
+#main{
+    width: 500px;
+    height: 550px;
+    background: #D3DFB8;
+    margin: 10px auto;
+}
+
+#othello {
+    display: block;
+    position: relative;
+    padding-top: 50px;
+    height: 550px;
+    width: 100%;
+}
+
+.white{
+    background-image: url('images/whitecircle.png');
+    background-size: cover;
+}
+.whitesuggest{
+    background-image: url('images/whitecircle.png');
+    background-size: cover;
+    opacity: 0.4;
+}
+.black{
+    background-image: url('images/blackcircle.png');
+    background-size: cover;
+}
+.blacksuggest{
+    background-image: url('images/blackcircle.png');
+    background-size: cover;
+    opacity: 0.4;
+}
+.othelloSquare {
+    border: 4px solid black;
+    height: 48px;
+    width: 48px;
+}
+
+tbody{
+    background: #456990;;
+}
+
+.othelloBoard {
+    position: relative;
+    border-collapse: collapse;
+    border: 4px solid black;
+    margin: 0 auto;
+    z-index: 100;
+}
