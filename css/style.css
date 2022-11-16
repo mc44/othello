@@ -54,6 +54,10 @@ h1 {
     height: 48px;
     width: 48px;
 }
+td:hover{
+    opacity:1;
+}
+
 
 tbody{
     background: #456990;;
