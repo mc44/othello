@@ -16,6 +16,7 @@ function create() {
     document.getElementById('55').classList.add("white")
     document.getElementById('45').classList.add("black")
     document.getElementById('54').classList.add("black")
+    countscore()
     //document.getElementById('64').classList.add("black")
     //test
     //document.getElementById('34').classList.add("black")
@@ -40,7 +41,7 @@ function setUp(){
     //gameContinue = false;
 }
 
-function checkAllowedMoves(playblack){
+async function checkAllowedMoves(playblack){
     allowed = [];
     if(playblack){
         pair = "white";
@@ -57,7 +58,9 @@ function checkAllowedMoves(playblack){
                     moves = emptyadjacent(locID);
                     for (var i = 0; i < moves.length; i++) {
                         if(checklineups(moves[i],locID,playblack)){
-                            allowed.push(moves[i]);
+                            if(!allowed.includes(moves[i])){
+                                allowed.push(moves[i]);
+                            }
                         }
                     }
                 }
@@ -65,7 +68,6 @@ function checkAllowedMoves(playblack){
             }
         }
     }
-    console.log(allowed);
     for (var i = 0; i<allowed.length;i++){
         if(playblack){
             document.getElementById(allowed[i].toString()).classList.add("blacksuggest");
@@ -74,16 +76,49 @@ function checkAllowedMoves(playblack){
         }
         document.getElementById(allowed[i].toString()).setAttribute("onclick", "onclick_handler(event);");
     }
-}
 
+    if(allowed.length === 0){
+        text = countscore();
+        showModal(text);
+    }
+    //AI STEPS
+    move = [];
+    aiscore = [];
+    if (!playblack){
+        for (var i = 0; i < allowed.length;i++){
+            clicked = allowed[i];
+            move.push(clicked);
+            lineups = adjacentopposite(clicked);
+            cscore = 0;
+            for (j = 0; j<lineups.length;j++){
+                cscore+= AIlineupflip(clicked,clicked-parseInt(lineups[j]))
+            }
+            aiscore[i]=cscore;
+        }
+        bestvalue = Math.max.apply(null, aiscore);
+        goodscoremoves = [];
+        for (var i = 0; i < move.length;i++){
+            if(aiscore[i]==bestvalue){
+                goodscoremoves.push(move[i]);
+            }
+        }
+        //Find Click
+        click = goodscoremoves[Math.floor(Math.random() * goodscoremoves.length)];
+        console.log("FOUND", click);
+        //Click
+        const result = await resolveAfter2Seconds();
+        document.getElementById(click.toString()).click();
+        document.getElementById(click.toString()).classList.add("highlight");
+    }
+}
 const onclick_handler = ev => {
     //get clicked value
     clicked = ev.target.id;
     clickedval = ev.target.classList[1];
     lineups = adjacentopposite(clicked);
-    console.log(lineups,"lineups");
+    //console.log(lineups,"lineups");
     for (i = 0; i<lineups.length;i++){
-        console.log("FLIpu", clicked,clicked-parseInt(lineups[i]));
+        //console.log("FLIpu", clicked,clicked-parseInt(lineups[i]));
         lineupflip(clicked,clicked-parseInt(lineups[i]))
     }
     playblack = !playblack;
@@ -100,7 +135,15 @@ const onclick_handler = ev => {
     ev.target.classList.add(add);
     //run next
     checkAllowedMoves(playblack);
+    countscore()
 }
+function resolveAfter2Seconds() {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        resolve('resolved');
+      }, 2000);
+    });
+  }
 
 function cleansuggest(){
     for (var x = 1; x < 9; ++x) {
@@ -113,6 +156,7 @@ function cleansuggest(){
             if(document.getElementById(currentID).classList[1] == "whitesuggest"){
                 document.getElementById(currentID).classList.remove("whitesuggest");
             }
+            document.getElementById(currentID).classList.remove("highlight");
         }
     }
 }
@@ -138,6 +182,28 @@ function lineupflip(clickedID, direction){
     }
 }
 
+function AIlineupflip(clickedID, direction){
+    if(playblack){
+        endon = "black";
+        find = "white";
+    }else{
+        endon = "white";
+        find = "black";
+    }
+    score = 0;
+    clickedID-=direction;
+    tile = document.getElementById(clickedID.toString()).classList[1];
+    //console.log(clickedID,direction,"FLIP",endon);
+    while(clickedID>=11 && clickedID<=88 && clickedID%10 != 9 && clickedID%10 != 0 && typeof tile != undefined && tile != endon){
+        if(tile==find){
+            score++;
+        }
+        clickedID-=direction;
+        tile = document.getElementById(clickedID.toString()).classList[1];
+    }
+    return score;
+}
+
 function adjacentopposite(curID){
     if (playblack){
         find = "white";
@@ -154,9 +220,8 @@ function adjacentopposite(curID){
             //check tile if its opposite the current player color
             ID = adjacent[i].toString();
             if(document.getElementById(ID).classList[1]  == find){
-                console.log(curID,ID,"checkthis one")
+                //console.log(curID,ID,"checkthis one")
                 if (checklineups(curID.toString(),ID,playblack)){
-                    console.log("IN");
                     movesID.push(ID);
                 }
             }
@@ -182,7 +247,7 @@ function checklineups(curID1,ID1,playblack){
     }
     tile = document.getElementById(setID).classList[1];
     while(curID1>=11 && curID1<=88 && curID1%10 != 9 && curID1%10 != 0 && typeof  tile != 'undefined' && tile != "whitesuggest" && tile != "blacksuggest"){
-        console.log(setID,"IN asljdlasjdlas",tile);
+        //console.log(setID,"IN asljdlasjdlas",tile);
         setID = curID1.toString();
         color = document.getElementById(curID1).classList[1];
         if(color==pair1){
@@ -212,3 +277,38 @@ function emptyadjacent(curID){
     return movesID;
 }
 
+function countscore(){
+    whitescore = 0;
+    blackscore = 0;
+    whitemoves = 0;
+    blackmoves = 0;
+    for (var x = 1; x < 9; ++x) {
+        for (var y = 1; y < 9; ++y) {
+            locID = x.toString()+y.toString();
+            if(document.getElementById(locID).classList[1] == "white"){
+                whitescore++;
+            }else if (document.getElementById(locID).classList[1] == "black"){
+                blackscore++;
+            }
+        }
+    }
+    document.getElementById("white").innerHTML = whitescore.toString();
+    document.getElementById("black").innerHTML = blackscore.toString();
+    if (whitescore>blackscore){
+        return "White Wins!";
+    }else if (whitescore<blackscore){
+        return "Black Wins!";
+    }else{
+        return "Tie!";
+    }
+}
+
+const showModal = (text) => {
+    document.getElementById('message').innerText = text;
+    document.getElementById('modal').classList.remove("hide");
+
+}
+
+const hideModal = () => {
+    document.getElementById('modal').classList.add("hide");
+}

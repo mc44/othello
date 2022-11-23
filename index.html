@@ -13,7 +13,13 @@
 <body onload="setUp()">
     <div id="main">
         <h1>Othello</h1>
+        <span id="mainspan">White: <span id="white">0</span>  |  Black: <span id="black">0</span></span>
         <div id="othello"></div>
+        
+    </div>
+    <div id="modal" class="hide">
+        <div id="header"><button id="closeBtn" onclick="hideModal()">x</button></div>
+        <h1 id="message"></h1>
     </div>
 </body>
 <script src="js/script.js"></script>

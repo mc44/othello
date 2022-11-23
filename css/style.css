@@ -31,6 +31,12 @@ h1 {
     width: 100%;
 }
 
+#mainspan{
+    color: #574D68;
+    font-family: 'Silkscreen';
+    font-size: larger;
+}
+
 .white{
     background-image: url('images/whitecircle.png');
     background-size: cover;
@@ -69,4 +75,41 @@ tbody{
     border: 4px solid black;
     margin: 0 auto;
     z-index: 100;
+}
+
+.highlight{
+    background-color: red;
+}
+
+/* Modal styles */
+#modal {
+    width: 40%;
+    height: 300px;
+    background: #DE5360;
+    position: absolute;
+    top: 65%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Silkscreen';
+}
+
+#modal #message {
+    color: #FDE1E3;
+    margin: 0;
+    font-size: 4rem;
+}
+.hide {
+    display: none;
+}
+
+#modal #header {
+    text-align: right;
+    padding: 5px 10px;
+}
+#modal #header button {
+    padding: 10px;
+    border: 0px;
+    background: #456990;
+    color: #D3DFB8;
+    cursor: pointer;
 }
