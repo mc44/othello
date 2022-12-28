@@ -152,6 +152,7 @@ const onclick_handler = ev => {
     countscore()
     if(!playblack){
         var moves = checkAILIST(playblack,gamestate);
+        
         var move = [];
         var score = [];
         console.log(moves,"list");
@@ -166,14 +167,16 @@ const onclick_handler = ev => {
         var best = Math.min(...score);
         var index = score.indexOf(best);
         console.log("RESULT", score,"|",move,index,best);
-        commitAi(moves[index]);
+        if (moves.length!=0){
+            commitAi(moves[index]);
+        }
     }
 }
 function resolveAfter2Seconds() {
     return new Promise(resolve => {
       setTimeout(() => {
         resolve('resolved');
-      }, 2000);
+      }, 1);
     });
   }
 
@@ -559,15 +562,15 @@ function AIchecklineups(board, curID1,ID1,black){
     }
     var tile = board[setID];
     //curID1 is the move, ID1 is the main tile
-    while(curID1>=11 && curID1<=88 && curID1%10 != 9 && curID1%10 != 0 && (tile=="white"|| tile=="black")){
+    while(curID1>=11 && curID1<=88 && curID1%10 != 9 && curID1%10 != 0 && (tile=="white"|| tile=="black") && typeof  tile != 'undefined' && tile != "whitesuggest" && tile != "blacksuggest"){
         //console.log(curID1,setID,"IN asljdlasjdlas",tile);
-        //setID = curID1.toString();
+        setID = curID1.toString();
         var color = board[curID1.toString()];;
         if(color==pair1){
             return true;    
         }
         curID1-=step;
-        //tile = board[setID];
+        tile = board[setID];
     }
     //console.log("fail",curID1)
     return false;
