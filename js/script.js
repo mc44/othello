@@ -160,7 +160,7 @@ const onclick_handler = ev => {
             var curgame = {...removesuggestAI(gamestate)};
             var board = {...pseudoclick(curgame, moves[x], playblack)};
             //console.log(board,x,moves,moves[x],curgame);
-            var result = minimax(board, 2, playblack);
+            var result = minimax(board, 2, playblack,-10000,10000);
             move.push(moves[x]);
             score.push(result);
         }
@@ -342,8 +342,9 @@ const hideModal = () => {
 //AI BRAIN DOWN HERE
 //countscore updates gamestate
 
-function minimax(board, depth, player){
+function minimax(board, depth, player,alpha, beta){
     var children = checkAILIST(player,board);
+    //console.log("test",alpha,beta,depth);
     //console.log(children,"children",board,children.length);
     if (depth==0 || children.length === 0){
         //console.log("I arrived here", getboardscore(board),depth,children.length);
@@ -355,8 +356,13 @@ function minimax(board, depth, player){
         var maxnum = -10000;
         for(var i = 0; i < children.length; i++){
             //console.log("Run", children[i],i,children.length);
-            var evalma = minimax(pseudoclick(board, children[i],player), depth-1, !player)
+            var evalma = minimax(pseudoclick(board, children[i],player), depth-1, !player,alpha,beta)
             var maxnum =  Math.max(maxnum,evalma);
+            var alpha =  Math.max(alpha,evalma);
+            if(beta<=alpha){
+                console.log("Pruned player",alpha,beta,depth);
+                break;
+            }
             //console.log(maxnum,"max",depth,i);
         }
         return maxnum
@@ -364,8 +370,13 @@ function minimax(board, depth, player){
         var minnum = 10000;
         for(var i = 0; i < children.length; i++){
             //console.log("Run", children[i],i,children.length);
-            var evalmi = minimax(pseudoclick(board, children[i],player), depth-1, !player)
+            var evalmi = minimax(pseudoclick(board, children[i],player), depth-1, !player,alpha,beta)
             var minnum = Math.min(minnum,evalmi);
+            var beta =  Math.min(beta,evalmi);
+            if (beta<=alpha){
+                console.log("Pruned ai",alpha,beta,depth);
+                break;
+            }
             //console.log(minnum,"min",depth,i);
         }
         return minnum
