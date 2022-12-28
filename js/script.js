@@ -47,6 +47,11 @@ function setUp(){
     checkAllowedMoves(playblack);
     //gameContinue = false;
 }
+async function commitAi(move){
+    const result = await resolveAfter2Seconds();
+    document.getElementById(move.toString()).click();
+    document.getElementById(move.toString()).classList.add("highlight");
+}
 
 async function checkAllowedMoves(playblack){
     allowed = [];
@@ -146,7 +151,22 @@ const onclick_handler = ev => {
     checkAllowedMoves(playblack);
     countscore()
     if(!playblack){
-        minimax(gamestate, 5, playblack);
+        var moves = checkAILIST(playblack,gamestate);
+        var move = [];
+        var score = [];
+        console.log(moves,"list");
+        for(var x = 0; x<moves.length;x++){
+            var curgame = {...removesuggestAI(gamestate)};
+            var board = {...pseudoclick(curgame, moves[x], playblack)};
+            //console.log(board,x,moves,moves[x],curgame);
+            var result = minimax(board, 2, playblack);
+            move.push(moves[x]);
+            score.push(result);
+        }
+        var best = Math.min(...score);
+        var index = score.indexOf(best);
+        console.log("RESULT", score,"|",move,index,best);
+        commitAi(moves[index]);
     }
 }
 function resolveAfter2Seconds() {
@@ -172,7 +192,17 @@ function cleansuggest(){
         }
     }
 }
-
+function removesuggestAI(board){
+    for (var x = 1; x < 9; ++x) {
+        for (var y = 1; y < 9; ++y) {
+            currentID = x.toString()+y.toString();
+            if(board[currentID] == "blacksuggest" || board[currentID] == "whitesuggest"){
+                board[currentID] = undefined;
+            }
+        }
+    }
+    return board
+}
 function lineupflip(clickedID, direction){
     if(playblack){
         endon = "black";
@@ -310,24 +340,39 @@ const hideModal = () => {
 //countscore updates gamestate
 
 function minimax(board, depth, player){
+    var children = checkAILIST(player,board);
+    //console.log(children,"children",board,children.length);
     if (depth==0 || children.length === 0){
+        //console.log("I arrived here", getboardscore(board),depth,children.length);
         return getboardscore(board);
     }
 
-    //player true is black
+    //player true is black, negative values is best choice for ai
     if(player){
-        maxnum = -10000;
-        for(i = 0; i < children.length; i++){
-            pseudoclick(board,)
-            eval = minimax()
+        var maxnum = -10000;
+        for(var i = 0; i < children.length; i++){
+            //console.log("Run", children[i],i,children.length);
+            var evalma = minimax(pseudoclick(board, children[i],player), depth-1, !player)
+            var maxnum =  Math.max(maxnum,evalma);
+            //console.log(maxnum,"max",depth,i);
         }
+        return maxnum
+    }else{
+        var minnum = 10000;
+        for(var i = 0; i < children.length; i++){
+            //console.log("Run", children[i],i,children.length);
+            var evalmi = minimax(pseudoclick(board, children[i],player), depth-1, !player)
+            var minnum = Math.min(minnum,evalmi);
+            //console.log(minnum,"min",depth,i);
+        }
+        return minnum
     }
 
 }
 
 //check allowable moves on current game state, renames current gamestate variables to white suggest black suggest
 function checkAILIST(playblack,curgame){
-    allowed = [];
+    var allowed = [];
     if(playblack){
         pair = "white";
     }else{
@@ -335,14 +380,16 @@ function checkAILIST(playblack,curgame){
     }
     for (var x = 1; x < 9; ++x) {
         for (var y = 1; y < 9; ++y) {
-            locID = x.toString()+y.toString();
-            tile = curgame[locId];
+            var locID = x.toString()+y.toString();
+            var tile = curgame[locID];
             if(typeof  tile != 'undefined' && tile != "whitesuggest" && tile != "blacksuggest"){ //check if tile has content
                 //categorize moves, if black play, check white tiles, if white play, check black tiles
                 if(tile.toString()==pair.toString()){
                     moves = AIemptyadjacent(curgame, locID);
+                    //console.log(moves,"moves",locID);
                     for (var i = 0; i < moves.length; i++) {
-                        if(AIchecklineups(moves[i],locID,playblack)){
+                        //console.log("When are you here");
+                        if(AIchecklineups(curgame,moves[i],locID,playblack)){
                             if(!allowed.includes(moves[i])){
                                 allowed.push(moves[i]);
                             }
@@ -366,7 +413,8 @@ function AIemptyadjacent(board,curID){
         if (adjacent[i]>=11 && adjacent[i]<=88 && adjacent[i]%10 != 9 && adjacent[i]%10 != 0){
             //check tile if not white,black,whitesuggest,blacksuggest, then it must be empty
             ID = adjacent[i].toString();
-            if(!"white,black,whitesuggest,blacksuggest".includes(board[ID])){
+            //,whitesuggest,blacksuggest   
+            if(!"white,black".includes(board[ID])){
                 movesID.push(ID);
             }
         }
@@ -374,17 +422,19 @@ function AIemptyadjacent(board,curID){
     return movesID;
 }
 
-function pseudoclick(board, clicked,black){
+function pseudoclick(board, clicked, black){
     //get clicked value
-    clickedval = ev.target.classList[1];
-    lineups = AIadjacentopposite(board, clicked);
+    //clickedval = ev.target.classList[1];
+
+    var lineups = AIadjacentopposite(board, clicked, black);
     //console.log(lineups,"lineups");
     for (i = 0; i<lineups.length;i++){
         //console.log("FLIpu", clicked,clicked-parseInt(lineups[i]));
-        AIpseudoflip(clicked,clicked-parseInt(lineups[i]),board,black)
+        var newboard = AIpseudoflip(clicked,clicked-parseInt(lineups[i]),board,black);
     }
-    black = !black;
-    return board;
+    //console.log("AAA",board);
+    //console.log("BBB",newboard,clicked);
+    return newboard;
 }
 
 //for a selected move and direction, it will return the number of flips, or score obtained
@@ -411,30 +461,34 @@ function AIlineupflip(clickedID, direction, board, black){
 }
 
 //for a selected move and direction, it will flip a sent board parameter
-function AIpseudoflip(clickedID, direction, board, black){
+function AIpseudoflip(clickedID, direction, wboard, black){
+    //console.log(board,"SSSSSSSSSSSSSSSSSSSSSSS");
     if(black){
-        endon = "black";
-        find = "white";
+        var endon = "black";
+        var find = "white";
     }else{
-        endon = "white";
-        find = "black";
+        var endon = "white";
+        var find = "black";
     }
-    score = 0;
+    var score = 0;
+    var board = {...wboard};
+    board[clickedID.toString()]=endon;
     clickedID-=direction;
-    tile = board[clickedID.toString()];
-    //console.log(clickedID,direction,"FLIP",endon);
-    while(clickedID>=11 && clickedID<=88 && clickedID%10 != 9 && clickedID%10 != 0 && !"white,black,whitesuggest,blacksuggest".includes(tile) && tile != endon){
+    var tile = board[clickedID.toString()];
+    //console.log(clickedID,direction,"FLIP",endon); !"white,black,whitesuggest,blacksuggest".includes(tile) &&
+    while(clickedID>=11 && clickedID<=88 && clickedID%10 != 9 && clickedID%10 != 0 &&  tile != endon){
         if(tile==find){
             board[clickedID.toString()]=endon;
         }
         clickedID-=direction;
-        tile = board[clickedID.toString()];
+        var tile = board[clickedID.toString()];
     }
+    //console.log(board,"ENNNNNNNNNNNNND");
     return board;
 }
 
 
-//if return positive white leaning (max), if negative black leaning (min)
+//if return positive black leaning (max), if negative white leaning (min)
 function getboardscore(board){
     whitescore = 0;
     blackscore = 0;
@@ -450,28 +504,35 @@ function getboardscore(board){
             }
         }
     }
-    return whitescore+(blackscore*-1); 
+    return blackscore+(whitescore*-1); 
 }
 
 //returns all potential moves adjacent to curID
-function AIadjacentopposite(board, curID,black){
+function AIadjacentopposite(board, curID, black){
     if (black){
-        find = "white";
+        var find = "white";
     }else{
-        find = "black";
+        var find = "black"; //on white move 
     }
-    curID = parseInt(curID);
-    movesID = [];
-    adjacent = [curID-1,curID+1,curID-10,curID+10,curID-11,curID-9,curID+9,curID+11];
+    var curID = parseInt(curID);
+    var movesID = [];
+    var adjacent = [curID-1,curID+1,curID-10,curID+10,curID-11,curID-9,curID+9,curID+11];
     //left = curID-1; right = curID+1; up = curID-10; down = curID+10; uleft = curID-11; uright = curID-9; dleft = curID+9; dright = curID+11;
+    //console.log(board,curID,"MIC");
     for(let i = 0; i < adjacent.length; i++) {
         //check if within 11 and 88, also if it ends with 9 or 0 to make sure its within playable area ids are within 11-18, 21-28, ...
         if (adjacent[i]>=11 && adjacent[i]<=88 && adjacent[i]%10 != 9 && adjacent[i]%10 != 0){
             //check tile if its opposite the current player color
-            ID = adjacent[i].toString();
+            var ID = adjacent[i].toString();         
+            //console.log(ID);
             if(board[ID] == find){
                 //console.log(curID,ID,"checkthis one")
-                if (AIchecklineups(board, curID.toString(),ID,black)){
+                //curID is the child, clicked val
+                //console.log("FIND ME MY TRUE",curID,ID);
+                var valid = AIchecklineups(board, curID.toString(),ID,black);
+                //console.log("CHEC", valid);
+                if (valid){
+                    //console.log("ITS HERE", movesID);
                     movesID.push(ID);
                 }
             }
@@ -482,30 +543,33 @@ function AIadjacentopposite(board, curID,black){
 
 function AIchecklineups(board, curID1,ID1,black){
     if(black){
-        pair1 = "black";
+        var pair1 = "black";
     }else{
-        pair1 = "white";
+        var pair1 = "white";
     }
-    curID1 = parseInt(curID1);
-    ID1 = parseInt(ID1);
-    step = curID1-ID1;
-    curID1-=step*2;
+    var curID1 = parseInt(curID1);
+    var ID1 = parseInt(ID1);
+    var step = curID1-ID1; //if curID1, the move is, 34, ID1, main tile, is 44, the step is -10
+    curID1-=step*2; //we jump over the main tile by doubling the step, and deducting it to current, -10*-2 = 20,
+    //curID1 is now 54, which is black
     setID = curID1.toString();
     //console.log(setID);
     if(curID1<11 || curID1>88 || curID1%10 == 9 || curID1%10 == 0){
         return false
     }
-    tile = board[setID];
-    while(curID1>=11 && curID1<=88 && curID1%10 != 9 && curID1%10 != 0 && !"white,black,whitesuggest,blacksuggest".includes(tile) && tile != "whitesuggest" && tile != "blacksuggest"){
-        //console.log(setID,"IN asljdlasjdlas",tile);
-        setID = curID1.toString();
-        color = board[curID1.toString()];;
+    var tile = board[setID];
+    //curID1 is the move, ID1 is the main tile
+    while(curID1>=11 && curID1<=88 && curID1%10 != 9 && curID1%10 != 0 && (tile=="white"|| tile=="black")){
+        //console.log(curID1,setID,"IN asljdlasjdlas",tile);
+        //setID = curID1.toString();
+        var color = board[curID1.toString()];;
         if(color==pair1){
             return true;    
         }
         curID1-=step;
-        tile = board[setID];
+        //tile = board[setID];
     }
+    //console.log("fail",curID1)
     return false;
 }
 
