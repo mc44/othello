@@ -160,7 +160,7 @@ const onclick_handler = ev => {
             var curgame = {...removesuggestAI(gamestate)};
             var board = {...pseudoclick(curgame, moves[x], playblack)};
             //console.log(board,x,moves,moves[x],curgame);
-            var result = minimax(board, 2, playblack,-10000,10000);
+            var result = minimax(board, 4, playblack,-10000,10000);
             move.push(moves[x]);
             score.push(result);
         }
@@ -518,7 +518,8 @@ function getboardscore(board){
             }
         }
     }
-    return blackscore+(whitescore*-1); 
+    return 100 * (blackscore - whitescore ) / (blackscore + whitescore)
+    //return blackscore+(whitescore*-1); 
 }
 
 //returns all potential moves adjacent to curID
